@@ -14,8 +14,10 @@ class DeadlineEngineImplTest {
     @Test
     void schedule() {
         assertEquals(1L, target.schedule(1L));
-        assertEquals(2L, target.schedule(2L));
-        assertEquals(3L, target.schedule(Instant.now().toEpochMilli()+3000L));
+        assertEquals(2L, target.schedule(1L));
+        assertEquals(3L, target.schedule(2L));
+        assertEquals(4L, target.schedule(2L));
+        assertEquals(5L, target.schedule(Instant.now().toEpochMilli()+3000L));
     }
 
     @Test
@@ -23,25 +25,37 @@ class DeadlineEngineImplTest {
         assertEquals(1L, target.schedule(1L));
         assertEquals(2L, target.schedule(2L));
         assertTrue(target.cancel(1L));
+        assertFalse(target.cancel(1L));
         assertFalse(target.cancel(3L));
-        assertFalse(target.cancel(0L));
+        assertTrue(target.cancel(2L));
+    }
+
+    @Test
+    void getKey() {
+        for (long i= 0L; i<Integer.MAX_VALUE+1L; i++){
+            long id = target.schedule(100L+i);
+            target.cancel(id);
+        }
+        assertEquals(2, target.schedule(100L));
     }
 
     @Test
     void poll() throws InterruptedException {
-        target.schedule(1000L);
-        target.schedule(2000L);
-        target.schedule(3000L);
-        Thread.sleep(4000L);
+        long nowMs = Instant.now().toEpochMilli();
+        target.schedule(1000L+nowMs);
+        target.schedule(2000L+nowMs);
+        target.schedule(3000L+nowMs);
+        Thread.sleep(4000);
         assertEquals(3, target.poll(Instant.now().toEpochMilli(), System.out::println, 5));
     }
 
     @Test
     void pollWithMax() throws InterruptedException {
-        target.schedule(1000L);
-        target.schedule(2000L);
-        target.schedule(3000L);
-        Thread.sleep(4000L);
+        long nowMs = Instant.now().toEpochMilli();
+        target.schedule(1000L+nowMs);
+        target.schedule(2000L+nowMs);
+        target.schedule(3000L+nowMs);
+        Thread.sleep(4000);
         assertEquals(2, target.poll(Instant.now().toEpochMilli(), System.out::println, 2));
     }
 
@@ -55,13 +69,17 @@ class DeadlineEngineImplTest {
         Thread.sleep(4000L);
         assertEquals(3, target.poll(Instant.now().toEpochMilli(), System.out::println, 6));
         Thread.sleep(6000L);
-        assertEquals(1, target.poll(Instant.now().toEpochMilli(), System.out::println, 6));
+        assertEquals(4, target.poll(Instant.now().toEpochMilli(), System.out::println, 6));
     }
 
     @Test
     void size() {
-        target.schedule(1L);
-        target.schedule(1L);
+        long id1 = target.schedule(1L);
+        long id2 = target.schedule(1L);
         assertEquals(2, target.size());
+
+        target.cancel(id1);
+        target.cancel(id2);
+        assertEquals(0, target.size());
     }
 }

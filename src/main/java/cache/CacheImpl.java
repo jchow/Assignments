@@ -1,7 +1,5 @@
 package cache;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
@@ -32,6 +30,6 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     protected V invokeFunc(K key) {
-            return customFct.apply(key);
+        return customFct.apply(key);
     }
 }
