@@ -30,6 +30,9 @@ class DeadlineEngineImplTest {
         assertTrue(target.cancel(2L));
     }
 
+    /**
+     * Beware this is a long running test
+     */
     @Test
     void getKey() {
         for (long i= 0L; i<Integer.MAX_VALUE+1L; i++){
@@ -70,6 +73,13 @@ class DeadlineEngineImplTest {
         assertEquals(3, target.poll(Instant.now().toEpochMilli(), System.out::println, 6));
         Thread.sleep(6000L);
         assertEquals(4, target.poll(Instant.now().toEpochMilli(), System.out::println, 6));
+    }
+
+    @Test
+    void exceptional(){
+        long nowMs = Instant.now().toEpochMilli();
+        target.schedule(nowMs-100L);
+        assertThrows(RuntimeException.class, ()->target.poll(Instant.now().toEpochMilli(), x-> {throw new RuntimeException("Fault");}, 2));
     }
 
     @Test
